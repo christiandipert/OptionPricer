@@ -2,9 +2,9 @@
 
 This repository is a journal where I explore some of the different techniques to price American & European option contracts, including:
 
-Black-Scholes European Model
-Bjerjsund-Stensland American Model,
-Monte-Carlo Options Pricing Model
+- Black-Scholes European Model
+- Bjerjsund-Stensland American Model
+- Other randomization models, such as Monte-Carlo
 
 I hope to explore some of the ways and reasons why Black-Scholes seems to almost always dominate the sphere of options pricing, and explore other methods of doing so.
 
