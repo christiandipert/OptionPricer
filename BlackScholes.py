@@ -19,7 +19,7 @@ import math
 class BlackScholes:
     
     INFL_RATE = 2.97 # percent
-    
+    MONTHLY_TRADING_DAYS = 21
     # BS VARIABLES
     # S = price of stock
     # V(S, t) = price(S, time)
@@ -41,7 +41,7 @@ class BlackScholes:
         self.ticker = Ticker
         self.r = self.riskFreeRate()
         
-    def callOption():
+    def callOption(self, K, T, t, S, r, sigma):
         
         # B.S. Call Option Price (Holy Grail):
         # 
@@ -58,9 +58,13 @@ class BlackScholes:
         # r = risk free rate (annual) (continuous compound)
         # sigma = std dev (volatility)
         
+        r = self.r
+        S = self.getUnderlyingPrice()
+        sigma = sigma()
+        
         return 0
     
-    def putOption():
+    def putOption(K, T, t, S, r, sigma):
         
         # B.S. PUT Option Price (Holy Grail):
         # (put-call parity invoked)
@@ -80,7 +84,17 @@ class BlackScholes:
         # r = risk free rate (annual) (continuous compound)
         # sigma = std dev (volatility)
         
+        r = self.r
+        
         return 0
+    
+    def get_realized_vol(dataset, time):
+        dataset['returns'] = np.log(dataset["Adj Close"]/dataset["Adj Close"].shift(1))
+        dataset.fillna(0, inplace = True)
+        #window/time tells us how many days out vol you want. ~21 = 1 month out vol (~21 trading days in a month)
+        #we do this so we can match up with the vix which is the 30 day out (~21 trading day) calculated vol
+        volatility = dataset.returns.rolling(window=time).std(ddof=0)*np.sqrt(252)
+        return volatility
     
     # r
     # uses alphavantage API to return most recent nominal risk-free rate
@@ -99,26 +113,30 @@ class BlackScholes:
         return 0
     
     # STD Deviation of return
-    def sigma(histReturns, avgReturn, months):
-        # use prices = np.array(time, price), then std_dev = np.std(prices)
-        sigma = 0.0
-        return sigma
+    def sigma(self, ticker, timeStart, timeEnd):
+        dataset = ticker.getDF(start=timeStart, end=timeEnd)
+        dataset['returns'] = np.log(dataset["Adj Close"]/dataset["Adj Close"].shift(1))
+        dataset.fillna(0, inplace = True)
+        #window/time tells us how many days out vol you want. ~21 = 1 month out vol (~21 trading days in a month)
+        #we do this so we can match up with the vix which is the 30 day out (~21 trading day) calculated vol
+        volatility = dataset.returns.rolling(window=self.MONTHLY_TRADING_DAYS).std(ddof=0)*np.sqrt(252)
+        return volatility.iloc[-1]
     
     # CDF of normal dist func
-    def N(T, t, sigma, S, K, r):
-        d1 = (1 / (sigma * (T - t) ** 0.5)) * (math.log(S / K) + (r + 0.5 * sigma ** 2) * (T - t))
+    def N(T, sigma, S, K, r):
+        d1 = (1 / (sigma * T ** 0.5)) * (math.log(S / K) + (r + 0.5 * sigma ** 2) * T)
         return stats.norm.cdf(d1)
     
-    def greeks(greek, call, sigma, r, K, S, T, t, d1):
+    def greeks(greek, call, sigma, r, K, S, T, d1):
         # change in call price over price of security
         if greek == "delta":
             # change in call price over price of security
             if call:
-                return N(T, t, sigma, S, K, r)
+                return N(T, sigma, S, K, r)
             else:
                 # put-call symmetry
                 # N(d1) - 1
-                return N(T, t, sigma, S, K, r) - 1
+                return N(T, sigma, S, K, r) - 1
     
         # change multiplier of call price over price of security
         elif greek == "gamma":

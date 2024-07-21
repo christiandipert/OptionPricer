@@ -1,4 +1,5 @@
 import yfinance as yf
+import pandas as df
 import matplotlib.pyplot as plt
 
 class Ticker:
@@ -8,8 +9,14 @@ class Ticker:
         
     def getInfo(self):
         return self.symbol.info
+    
+    def getDF(self):
+        return yf.download(self.symbol.info['symbol'])
         
-    def plotClose(self, start, end):
+    def getDF(self, start, end):
+        return yf.download(self.symbol.info['symbol'], start=start, end=end)
+        
+    def getClose(self, start, end):
         stock = yf.download(self.symbol.info['symbol'], start=start, end=end)
         close = stock.Close.to_frame()
         close.plot()

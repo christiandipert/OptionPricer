@@ -7,10 +7,10 @@ import pprint
 import yfinance as yf
 
 def main():
-    ticker = Ticker('MSFT')
+    ticker = Ticker('GME')
     info = ticker.getInfo() # LARGE Json
     blackScholes = BlackScholes(ticker)
-    print(blackScholes.r)
+    print(blackScholes.sigma(ticker, "2020-07-14", "2024-07-14"))
     # ticker.plotClose(start="2020-07-14", end="2024-07-14") # Example of plotClose()
 
 if __name__ == "__main__":
